@@ -625,7 +625,7 @@ Windows Security EventID 4720 and 4732 store the target account in different fie
 </p>
 
 <p align="center">
-  <img src="https://img.shields.io/badge/GPA-4.92%20%2F%205.0-gold?style=for-the-badge"/>
+  <img src="https://img.shields.io/badge/![GPA](https://img.shields.io/badge/GPA-4.92-gold?style=for-the-badge)"/>
   <img src="https://img.shields.io/badge/Location-Canberra%2C%20ACT-blue?style=for-the-badge"/>
   <img src="https://img.shields.io/badge/Status-Australian%20Permanent%20Resident-00843D?style=for-the-badge"/>
   <img src="https://img.shields.io/badge/Pursuing-BTL1%20%7C%20SC--200-E63946?style=for-the-badge"/>
