@@ -586,7 +586,7 @@ DUAL-SIEM-DETECTION-LAB/
 ## 🧠 Lessons Learned & Challenges
 
 **1. inputs.conf field mapping conflict**
-The Splunk Universal Forwarder's default Windows add-on uses different field names than expected (`Source_Network_Address` vs `src_ip`). Resolved by inspecting raw events and writing explicit `rex` field extractions directly in the SPL queries rather than relying on field aliases — making the detection logic self-contained and environment-agnostic.
+The Splunk Universal Forwarder's default Windows add-on uses different field names than expected (`Source_Network_Address` vs `src_ip`). Resolved by inspecting raw events and writing explicit `rex` field extractions directly in the SPL queries rather than relying on field aliases — making the detection logic self-contained and environment-agnostic. All SPL queries are also explicitly scoped to `index=windows_honeypot` rather than `index=*` — wildcarding the index forces Splunk to search all data buckets, a performance anti-pattern that enterprise SOC teams actively prohibit.
 
 **2. Geo-IP database variance between platforms**
 Azure Sentinel's `geo_info_from_ip_address()` and Splunk's `iplocation` command use different underlying geo-IP databases. The same attacker IP `163.47.70.77` resolved to **Sydney** in Sentinel and **Adelaide** in Splunk. This is expected behaviour — both correctly identify Australia as the origin country, which is the actionable intelligence. Documented as a known cross-platform variance rather than a bug.
@@ -611,10 +611,31 @@ Windows Security EventID 4720 and 4732 store the target account in different fie
 | **KQL** | `summarize`, `join`, `bin`, `countif`, `column_ifexists`, `geo_info_from_ip_address`, `replace_string` |
 | **SPL** | `rex`, `streamstats`, `iplocation`, `coalesce`, `eval`, `stats`, `rename`, time binning |
 | **MITRE ATT&CK** | T1110.001, T1110, T1078, T1078.003, T1136.001 |
-| **Detection Engineering** | Threshold alerting, behavioral baselining, geo-enrichment, persistence chain detection |
+| **Detection Engineering** | Threshold alerting, behavioral baselining, geo-enrichment, persistence chain detection (aligns with SC-200 and BTL1 practical objectives) |
 | **Detection Tuning** | Noise reduction, field extraction, schema-resilient queries, cross-platform parity validation |
 | **Incident Response** | Automated Sentinel analytic rules, incident triage, cross-platform correlation |
 | **Security Operations** | Live honeypot operation, real attacker traffic analysis, Windows Security Event forensics |
+
+---
+
+## 🔮 What's Next
+
+- [x] Added **[COMPARISON.md](./COMPARISON.md)** — full Sentinel vs Splunk platform analysis based on this lab's data
+- [ ] Integrate **AbuseIPDB** threat intel lookups — enrich attacker IPs with known-bad reputation scores in both SIEMs
+- [ ] Build **Sentinel Workbook** — live attack map matching the honeypot SIEM dashboard
+- [ ] Extend to **Detection 6** — lateral movement detection via EventID 4624 logon type analysis
+- [ ] **🤖 Pilot AI-Driven Triage** — explore **IBM watsonx Orchestrate** agents to autonomously enrich brute-force incidents with threat intel and route to the correct response queue before any human touches the ticket
+
+---
+
+## 🔗 Related Projects
+
+| Project | Description |
+|---------|-------------|
+| [Azure Sentinel Honeypot SIEM](https://github.com/shank078/azure-sentinel-honeypot-siem) | The original honeypot — 1,400+ real attacks mapped globally with geolocation enrichment |
+| [SOAR Pipeline — Sentinel to Jira](https://github.com/shank078/azure-sentinel-jira-soar-pipeline) | Zero-touch automated incident ticketing from Sentinel |
+| [Azure Identity Security Lab](https://github.com/shank078/azure-identity-security-lab) | Full red/blue team MFA compromise and IR cycle |
+| [Splunk SOC Detection Lab](https://github.com/shank078/splunk-soc-detection-lab) | Standalone Splunk — 28,963 events, 4 attacker IPs, live IR executed |
 
 ---
 
