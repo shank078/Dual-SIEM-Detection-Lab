@@ -49,9 +49,10 @@
 
 | Aspect | KQL (Microsoft Sentinel) | SPL (Splunk Enterprise) |
 |:-------|:------------------------|:------------------------|
+| **Data Architecture** | **Schema-on-Write** — data is parsed and strongly typed upon ingestion | **Schema-on-Read** — data stored raw; fields extracted dynamically at search time |
 | **Readability** | Highly structured, clean tabular pipeline syntax | High-density, powerful string-processing syntax |
 | **Temporal Correlation** | Native `join` with explicit time window predicates | `streamstats` — elegant, stateful, computationally light |
-| **Field Extraction (Windows Events)** | Fully automated out-of-the-box | Required custom `rex` statements against `_raw` to resolve field mapping conflicts |
+| **Field Extraction (Windows Events)** | Fully automated out-of-the-box via native Windows Security tables | Required custom `rex` statements against `_raw` payload to resolve field mapping conflicts |
 | **Geo Enrichment** | `geo_info_from_ip_address()` — built-in, returns structured object | `iplocation` — fast, single command |
 | **String Cleaning** | `replace_string()` for domain prefix stripping | `coalesce()` + `eval` for multi-field fallback resolution |
 | **Schema Resilience** | `column_ifexists()` for cross-EventID field variance | `coalesce()` across multiple possible field names |
@@ -67,7 +68,7 @@
 | **1. Brute Force** | Good ✅ | Good ✅ | Both caught identical high-frequency attacker IPs — `163.47.70.77` (14 attempts/5min) confirmed on both platforms |
 | **2. Account Lockout** | Good ✅ | Excellent 🌟 | `streamstats` made the IP-to-lockout correlation cleaner in Splunk; same result (`labadmin` locked out by `163.47.70.77`) confirmed cross-platform |
 | **3. Geo-Anomaly** | Good ✅ Sydney, AU | Good ✅ Adelaide, AU | **Critical Finding:** Real geo-IP database variance — Azure uses its own database, Splunk uses MaxMind. Same IP resolves to different cities. Same country confirmed. Document as expected cross-platform behaviour, not a bug |
-| **4. Priv Escalation** | Good Baseline ✅ | Good Baseline ✅ | Required tuning to exclude `NT SERVICE\SplunkForwarder` noise — a real-world SOC tuning decision. No SPL screenshot captured for this detection (lab gap noted) |
+| **4. Priv Escalation** | Good Baseline ✅ | Good Baseline ✅ | Required tuning to exclude `NT SERVICE\SplunkForwarder` noise — a real-world SOC tuning decision. SPL logic successfully validated; visual artifact omitted for brevity |
 | **5. New User Persistence** | Good ✅ | Good ✅ | Both cleanly tracked the creation of backdoor account `attacker` and its immediate promotion to `Administrators` — full persistence chain captured on both platforms |
 
 ---
@@ -94,14 +95,14 @@ This is where the platforms diverge most significantly for operational SOC use.
 
 | Cost Item | Microsoft Sentinel | Splunk Enterprise |
 |:----------|:-------------------|:-----------------|
-| **Software License** | Pay-per-GB ingestion (Log Analytics) | Free — 60-day developer trial |
-| **Ingestion Cost (7-day lab)** | ~$3–8 AUD (low volume honeypot data) | $0 |
-| **Underlying VM Compute** | Standard D2als v6 — shared with LAW | Standard D2als v6 — `vm-splunk` |
-| **Combined VM Cost** | ~$5–10 AUD/day (both VMs running) | same |
+| **Software License** | Pay-per-GB ingestion (Log Analytics) | Free — 60-day developer trial (500 MB/day indexing limit) |
+| **Ingestion Cost (7-day lab)** | ~$3–8 AUD (low volume honeypot data) | $0 — within free tier limit for targeted honeypot |
+| **Underlying VM Compute** | Standard D2als v6 — `vm-honeypot` (shared source for both SIEMs) | Standard D2als v6 — `vm-splunk` (additional VM required) |
+| **Combined VM Cost** | ~$5–10 AUD/day (both VMs running simultaneously) | Included in combined figure |
 | **OS Maintenance** | None — fully managed SaaS | Ubuntu 24.04 — disk monitoring, service uptime, patching |
 | **Total 7-day Estimate** | ~$40–75 AUD | ~$35–70 AUD (compute only) |
 
-> **Verdict:** At low honeypot data volumes, both platforms cost roughly the same over a 7-day lab. The real operational cost difference is **engineering time** — Sentinel requires zero OS upkeep while Splunk requires actively managing an Ubuntu Linux instance, monitoring host disk capacity, and ensuring the Splunk service stays running after VM reboots.
+> **Verdict:** At low honeypot data volumes, both platforms cost roughly the same over a 7-day lab. The real operational cost difference is **engineering time** — Sentinel requires zero OS upkeep while Splunk requires actively managing an Ubuntu Linux instance, monitoring host disk capacity, and ensuring the Splunk service stays running after VM reboots. Note: Splunk's free tier 500 MB/day indexing cap is sufficient for a targeted honeypot but requires strict `inputs.conf` filtering to avoid license violations — a real constraint any SOC team running Splunk on a budget must manage.
 
 ---
 
@@ -139,5 +140,5 @@ Building cross-platform detection parity on real attacker traffic gave me more p
 
 <p align="center">
   <b>Shankar Baral — Junior Cyber Security Analyst | Canberra, ACT</b><br/>
-  <i>Master of Cyber Security, Charles Sturt University — GPA 4.92</i>
+  <i>Master of Information Technology (Cyber Security), Charles Sturt University — GPA 4.92</i>
 </p>
